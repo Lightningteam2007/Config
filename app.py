@@ -1,11 +1,13 @@
 import re
+import os
 from telegram.ext import Application, MessageHandler, filters
 import logging
+import asyncio
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-TOKEN = "8316746677:AAHUis73jZA6acgA6AbDzmiZAkVv7SYpbyg"
+TOKEN = os.getenv("BOT_TOKEN")
 SOURCE_CHANNELS = ["@V2RAYROZ", "@v2rayngvpn", "@V2ray_Alpha"]
 DESTINATION_CHANNEL = "@configs_freeiran"
 CHANNEL_ID = "@configs_freeiran"
@@ -27,14 +29,18 @@ async def forward_message(update, context):
             except Exception as e:
                 logger.error(f"خطا در ارسال کانفیگ: {e}")
 
-def main():
+async def main():
     application = Application.builder().token(TOKEN).build()
     application.add_handler(MessageHandler(
         filters.TEXT & filters.Chat(chat_id=SOURCE_CHANNELS) & ~filters.COMMAND,
         forward_message
     ))
     logger.info("ربات شروع به کار کرد...")
-    application.run_polling()
+    await application.initialize()
+    await application.updater.start_polling()
+    await asyncio.sleep(300)  # 5 دقیقه اجرا می‌مونه
+    await application.updater.stop()
+    await application.stop()
 
 if __name__ == '__main__':
-    main()
+    asyncio.run(main())

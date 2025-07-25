@@ -36,11 +36,17 @@ async def main():
         forward_message
     ))
     logger.info("ربات شروع به کار کرد...")
-    await application.initialize()
-    await application.updater.start_polling()
-    await asyncio.sleep(300)  # 5 دقیقه اجرا می‌مونه
-    await application.updater.stop()
-    await application.stop()
+    try:
+        await application.initialize()
+        await application.updater.start_polling()
+        await asyncio.sleep(280)  # 4 دقیقه و 40 ثانیه اجرا می‌مونه
+    finally:
+        try:
+            await application.updater.stop()
+            await application.stop()
+            logger.info("ربات متوقف شد")
+        except Exception as e:
+            logger.error(f"خطا در توقف ربات: {e}")
 
 if __name__ == '__main__':
     asyncio.run(main())

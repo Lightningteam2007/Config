@@ -1,0 +1,36 @@
+name: Clean Old Configs
+on:
+  schedule:
+    - cron: '0 2 * * *'  # هر روز ساعت 02:00 UTC
+  workflow_dispatch:  # امکان اجرای دستی
+permissions:
+  contents: write
+jobs:
+  clean-configs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: دریافت مخزن
+        uses: actions/checkout@v4
+      - name: محدود کردن فایل به 100 خط آخر
+        run: |
+          # اگر فایل وجود داره، فقط 100 خط آخر رو نگه دار
+          if [ -f processed_configs.txt ]; then
+            tail -n 100 processed_configs.txt > temp_file
+            mv temp_file processed_configs.txt
+            echo "فایل processed_configs.txt به 100 خط آخر محدود شد"
+          else
+            echo "فایل processed_configs.txt وجود ندارد، هیچ اقدامی لازم نیست"
+          fi
+      - name: Commit تغییرات
+        run: |
+          git config --global user.name 'GitHub Action'
+          git config --global user.email 'action@github.com'
+          if git diff --quiet processed_configs.txt; then
+            echo "هیچ تغییری برای کامیت وجود ندارد"
+          else
+            git add processed_configs.txt
+            git commit -m "محدود کردن processed_configs.txt به 100 خط آخر"
+            git push
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

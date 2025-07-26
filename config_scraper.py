@@ -12,9 +12,9 @@ logger = logging.getLogger(__name__)
 # تنظیمات
 TOKEN = os.getenv("BOT_TOKEN")
 SOURCE_CHANNELS = [
-    "https://t.me/V2RAYROZ",
-    "https://t.me/v2rayngvpn",
-    "https://t.me/V2ray_Alpha"
+    "https://t.me/s/V2RAYROZ",
+    "https://t.me/s/v2rayngvpn",
+    "https://t.me/s/V2ray_Alpha"
 ]
 DEST_CHANNEL = "@configs_freeiran"
 CONFIG_PATTERN = r'(vmess://[^\s]+|vless://[^\s]+|trojan://[^\s]+|ss://[^\s]+)'
@@ -36,14 +36,17 @@ def scrape_channel(url):
         response.raise_for_status()
         logger.info(f"درخواست به {url} موفق بود: کد وضعیت {response.status_code}")
         soup = BeautifulSoup(response.text, "html.parser")
-        # پیدا کردن پیام‌ها با چند کلاس احتمالی
-        messages = soup.find_all("div", class_=lambda x: x and ("tgme_widget_message_text" in x or "tgme_widget_message" in x))
+        # پیدا کردن پیام‌ها با کلاس‌های مناسب برای لینک‌های /s/
+        messages = soup.find_all("div", class_=lambda x: x and "tgme_widget_message_bubble" in x)
         configs = []
         for msg in messages:
-            text = msg.get_text(strip=True)
-            logger.debug(f"متن پیام از {url}: {text[:100]}...")  # لاگ 100 کاراکتر اول
-            found_configs = re.findall(CONFIG_PATTERN, text)
-            configs.extend(found_configs)
+            # گرفتن متن پیام
+            text_elements = msg.find_all("div", class_="tgme_widget_message_text")
+            for text_elem in text_elements:
+                text = text_elem.get_text(strip=True)
+                logger.debug(f"متن پیام از {url}: {text[:100]}...")
+                found_configs = re.findall(CONFIG_PATTERN, text)
+                configs.extend(found_configs)
         logger.info(f"کانفیگ‌های پیدا شده از {url}: {configs}")
         return configs
     except requests.exceptions.RequestException as e:

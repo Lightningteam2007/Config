@@ -77,11 +77,11 @@ async def send_to_telegram(configs):
     for config in configs:
         if config not in processed_configs:
             try:
-                # پیام زیبا و کپی‌شدنی با فرمت دستی و ایموجی
+                # پیام زیبا با فرمت HTML برای کپی‌شدن کانفیگ
                 message = (
                     "🌟 *=== کانفیگ جدید ===* 🌟\n"
-                    "🔥 کانفیگ :\n"
-                    f"    <code>{config}</code>\n"  # تگ <code> برای کپی‌شدن
+                    "🔥 کانفیگ (کپی‌شدنی):\n"
+                    f"    <code>{config}</code>\n"  # تگ <code> با HTML
                     "🌐 وب‌سایت:\n"
                     f"    {WEBSITE_URL} ✨ (کانفیگ‌های بیشتر)\n"
                     "🚀 ویژگی‌ها:\n"
@@ -100,6 +100,7 @@ async def send_to_telegram(configs):
                     await bot.send_message(
                         chat_id=DEST_CHANNEL,
                         text=part,
+                        parse_mode="HTML",  # فعال کردن فرمت HTML
                         disable_web_page_preview=True
                     )
                 logger.info(f"کانفیگ به {DEST_CHANNEL} ارسال شد: {config}")

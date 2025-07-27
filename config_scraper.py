@@ -21,12 +21,35 @@ DEST_CHANNEL = "@configs_freeiran"
 CONFIG_PATTERN = r'(vmess://[^\s]+|vless://[^\s]+|trojan://[^\s]+|ss://[^\s]+)'
 OUTPUT_FILE = "processed_configs.txt"
 WEBSITE_URL = "https://lightningteam2007.github.io/Configfree.github.io/"  # آدرس سایتت
+MAX_MESSAGE_LENGTH = 4000  # حداکثر طول پیام برای جلوگیری از محدودیت تلگرام
 
 def read_processed_configs():
     if os.path.exists(OUTPUT_FILE):
         with open(OUTPUT_FILE, "r", encoding="utf-8") as f:
             return set(f.read().splitlines())
     return set()
+
+def escape_markdown(text):
+    """پاکسازی کاراکترهای خاص برای فرمت Markdown تلگرام"""
+    escape_chars = r'_*[]()~`>#+-=|{}.!'
+    return ''.join('\\' + char if char in escape_chars else char for char in text)
+
+def split_message(message, max_length=MAX_MESSAGE_LENGTH):
+    """تقسیم پیام به بخش‌های کوچک‌تر"""
+    if len(message) <= max_length:
+        return [message]
+    parts = []
+    current_part = ""
+    for line in message.split('\n'):
+        if len(current_part) + len(line) + 1 <= max_length:
+            current_part += line + '\n'
+        else:
+            if current_part:
+                parts.append(current_part.strip())
+            current_part = line + '\n'
+    if current_part:
+        parts.append(current_part.strip())
+    return parts
 
 def scrape_channel(url):
     try:
@@ -59,10 +82,11 @@ async def send_to_telegram(configs):
     for config in configs:
         if config not in processed_configs:
             try:
-                # ساخت پیام با جزئیات جدید
+                # ساخت پیام با فرمت‌بندی ایمن
+                config_safe = escape_markdown(config)
                 message = (
                     f"🎯 *کانفیگ جدید*\n"
-                    f"🔗 *کانفیگ*: `{config}`\n"
+                    f"🔗 *کانفیگ*: `{config_safe}`\n"
                     f"🌐 *وب‌سایت*: [Config Free Iran]({WEBSITE_URL}) - کانفیگ‌های بیشتر!\n"
                     f"🚀 *ویژگی*: کانفیگ‌های سریع و رایگان در کانال ما\n"
                     f"ℹ️ *توضیحات*: این کانفیگ برای استفاده با v2rayNG مناسب است. لطفاً بعد از استفاده تست کنید!\n"
@@ -70,12 +94,15 @@ async def send_to_telegram(configs):
                     f"⚠️ *هشدار*: از اشتراک‌گذاری غیرمجاز خودداری کنید."
                 )
 
-                await bot.send_message(
-                    chat_id=DEST_CHANNEL,
-                    text=message,
-                    parse_mode="Markdown",  # برای فرمت‌بندی لینک و متن
-                    disable_web_page_preview=True
-                )
+                # تقسیم پیام به بخش‌های کوچک‌تر اگه لازم باشه
+                message_parts = split_message(message)
+                for part in message_parts:
+                    await bot.send_message(
+                        chat_id=DEST_CHANNEL,
+                        text=part,
+                        parse_mode="Markdown",
+                        disable_web_page_preview=True
+                    )
                 logger.info(f"کانفیگ به {DEST_CHANNEL} ارسال شد: {config}")
                 with open(OUTPUT_FILE, "a", encoding="utf-8") as f:
                     f.write(f"{config}\n")

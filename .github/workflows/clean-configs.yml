@@ -1,7 +1,7 @@
 name: Clean Old Configs
 on:
   schedule:
-    - cron: '0 2 * * *'  # هر روز ساعت 02:00 UTC
+    - cron: '0 */2 * * *'  # هر 2 ساعت یکبار در دقیقه 0ام
   workflow_dispatch:  # امکان اجرای دستی
 permissions:
   contents: write
@@ -11,26 +11,37 @@ jobs:
     steps:
       - name: دریافت مخزن
         uses: actions/checkout@v4
-      - name: محدود کردن فایل به 100 خط آخر
+        with:
+          fetch-depth: 0  # دریافت کامل تاریخچه برای بررسی تغییرات
+      
+      - name: محدود کردن فایل به 100 خط آخر (در صورت نیاز)
         run: |
-          # اگر فایل وجود داره، فقط 100 خط آخر رو نگه دار
-          if [ -f processed_configs.txt ]; then
+          # فقط اگر فایل وجود دارد و بیش از 100 خط دارد، آن را محدود کن
+          if [ -f processed_configs.txt ] && [ $(wc -l < processed_configs.txt) -gt 100 ]; then
+            echo "تعداد خطوط فعلی: $(wc -l < processed_configs.txt)"
             tail -n 100 processed_configs.txt > temp_file
             mv temp_file processed_configs.txt
-            echo "فایل processed_configs.txt به 100 خط آخر محدود شد"
+            echo "فایل به 100 خط آخر محدود شد"
           else
-            echo "فایل processed_configs.txt وجود ندارد، هیچ اقدامی لازم نیست"
+            echo "فایل وجود ندارد یا کمتر/مساوی 100 خط دارد. تعداد خطوط: $(wc -l < processed_configs.txt || echo 0)"
           fi
-      - name: Commit تغییرات
+      
+      - name: Commit و Push تغییرات
         run: |
           git config --global user.name 'GitHub Action'
           git config --global user.email 'action@github.com'
-          if git diff --quiet processed_configs.txt; then
-            echo "هیچ تغییری برای کامیت وجود ندارد"
+          
+          if [ -f processed_configs.txt ]; then
+            if git diff --quiet processed_configs.txt; then
+              echo "هیچ تغییری برای کامیت وجود ندارد"
+            else
+              git add processed_configs.txt
+              git commit -m "Auto-clean: محدود کردن processed_configs.txt به 100 خط آخر"
+              git push origin HEAD:${{ github.ref_name }}
+              echo "تغییرات با موفقیت push شد"
+            fi
           else
-            git add processed_configs.txt
-            git commit -m "محدود کردن processed_configs.txt به 100 خط آخر"
-            git push
+            echo "فایلی برای commit وجود ندارد"
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

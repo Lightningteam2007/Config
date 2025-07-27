@@ -5,13 +5,16 @@ from bs4 import BeautifulSoup
 from telegram import Bot
 import logging
 import asyncio
-from jdatetime import datetime as jdatetime  # برای تاریخ شمسی (فقط برای سازگاری نگه داشته شده)
+from jdatetime import datetime as jdatetime  # برای سازگاری نگه داشته شده
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+# تنظیم لگار با سطح DEBUG برای جزئیات بیشتر
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 # تنظیمات
 TOKEN = os.getenv("BOT_TOKEN")
+if not TOKEN:
+    logger.error("متغیر محیطی BOT_TOKEN خالی یا تنظیم نشده است!")
 SOURCE_CHANNELS = [
     "https://t.me/s/V2RAYROZ",
     "https://t.me/s/v2rayngvpn",
@@ -21,7 +24,7 @@ DEST_CHANNEL = "@configs_freeiran"
 CONFIG_PATTERN = r'(vmess://[^\s]+|vless://[^\s]+|trojan://[^\s]+|ss://[^\s]+)'
 OUTPUT_FILE = "processed_configs.txt"
 WEBSITE_URL = "https://lightningteam2007.github.io/Configfree.github.io/"
-MAX_MESSAGE_LENGTH = 4000  # حداکثر طول پیام برای جلوگیری از محدودیت تلگرام
+MAX_MESSAGE_LENGTH = 3000  # کاهش به 3000 برای اطمینان از محدودیت تلگرام
 
 def read_processed_configs():
     if os.path.exists(OUTPUT_FILE):
@@ -72,6 +75,9 @@ def scrape_channel(url):
         return []
 
 async def send_to_telegram(configs):
+    if not TOKEN:
+        logger.error("توکن ربات (BOT_TOKEN) تنظیم نشده است، ارسال متوقف شد.")
+        return
     bot = Bot(token=TOKEN)
     processed_configs = read_processed_configs()
     for config in configs:
@@ -81,7 +87,7 @@ async def send_to_telegram(configs):
                 message = (
                     "🌟 *=== کانفیگ جدید ===* 🌟\n"
                     "🔥 کانفیگ (کپی‌شدنی):\n"
-                    f"    <code>{config}</code>\n"  # تگ <code> با HTML
+                    f"    <code>{config}</code>\n"
                     "🌐 وب‌سایت:\n"
                     f"    {WEBSITE_URL} ✨ (کانفیگ‌های بیشتر)\n"
                     "🚀 ویژگی‌ها:\n"
@@ -100,14 +106,15 @@ async def send_to_telegram(configs):
                     await bot.send_message(
                         chat_id=DEST_CHANNEL,
                         text=part,
-                        parse_mode="HTML",  # فعال کردن فرمت HTML
+                        parse_mode="HTML",
                         disable_web_page_preview=True
                     )
+                    logger.debug(f"بخش پیام برای کانفیگ {config} به {DEST_CHANNEL} ارسال شد")
                 logger.info(f"کانفیگ به {DEST_CHANNEL} ارسال شد: {config}")
                 with open(OUTPUT_FILE, "a", encoding="utf-8") as f:
                     f.write(f"{config}\n")
             except Exception as e:
-                logger.error(f"خطا در ارسال کانفیگ به {DEST_CHANNEL}: {e}")
+                logger.error(f"خطا در ارسال کانفیگ {config} به {DEST_CHANNEL}: {e}")
 
 async def main():
     all_configs = []

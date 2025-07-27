@@ -20,7 +20,7 @@ SOURCE_CHANNELS = [
 DEST_CHANNEL = "@configs_freeiran"
 CONFIG_PATTERN = r'(vmess://[^\s]+|vless://[^\s]+|trojan://[^\s]+|ss://[^\s]+)'
 OUTPUT_FILE = "processed_configs.txt"
-WEBSITE_URL = "https://lightningteam2007.github.io/Configfree.github.io/"  # آدرس سایتت
+WEBSITE_URL = "https://lightningteam2007.github.io/Configfree.github.io/"
 MAX_MESSAGE_LENGTH = 4000  # حداکثر طول پیام برای جلوگیری از محدودیت تلگرام
 
 def read_processed_configs():
@@ -28,11 +28,6 @@ def read_processed_configs():
         with open(OUTPUT_FILE, "r", encoding="utf-8") as f:
             return set(f.read().splitlines())
     return set()
-
-def escape_markdown(text):
-    """پاکسازی کاراکترهای خاص برای فرمت Markdown تلگرام"""
-    escape_chars = r'_*[]()~`>#+-=|{}.!'
-    return ''.join('\\' + char if char in escape_chars else char for char in text)
 
 def split_message(message, max_length=MAX_MESSAGE_LENGTH):
     """تقسیم پیام به بخش‌های کوچک‌تر"""
@@ -82,16 +77,12 @@ async def send_to_telegram(configs):
     for config in configs:
         if config not in processed_configs:
             try:
-                # ساخت پیام با فرمت‌بندی ایمن
-                config_safe = escape_markdown(config)
+                # پیام ساده بدون فرمت Markdown
                 message = (
-                    f"🎯 *کانفیگ جدید*\n"
-                    f"🔗 *کانفیگ*: `{config_safe}`\n"
-                    f"🌐 *وب‌سایت*: [Config Free Iran]({WEBSITE_URL}) - کانفیگ‌های بیشتر!\n"
-                    f"🚀 *ویژگی*: کانفیگ‌های سریع و رایگان در کانال ما\n"
-                    f"ℹ️ *توضیحات*: این کانفیگ برای استفاده با v2rayNG مناسب است. لطفاً بعد از استفاده تست کنید!\n"
-                    f"💡 *کانال ما*: @{DEST_CHANNEL}\n\n"
-                    f"⚠️ *هشدار*: از اشتراک‌گذاری غیرمجاز خودداری کنید."
+                    "🎯 کانفیگ جدید:\n"
+                    f"🔗 {config}\n"
+                    f"🌐 وب‌سایت: {WEBSITE_URL}\n"
+                    f"💡 کانال: @{DEST_CHANNEL}"
                 )
 
                 # تقسیم پیام به بخش‌های کوچک‌تر اگه لازم باشه
@@ -100,7 +91,6 @@ async def send_to_telegram(configs):
                     await bot.send_message(
                         chat_id=DEST_CHANNEL,
                         text=part,
-                        parse_mode="Markdown",
                         disable_web_page_preview=True
                     )
                 logger.info(f"کانفیگ به {DEST_CHANNEL} ارسال شد: {config}")

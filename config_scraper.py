@@ -5,6 +5,7 @@ from bs4 import BeautifulSoup
 from telegram import Bot
 import logging
 import asyncio
+from jdatetime import datetime as jdatetime  # برای تاریخ شمسی (فقط برای سازگاری نگه داشته شده)
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -19,6 +20,7 @@ SOURCE_CHANNELS = [
 DEST_CHANNEL = "@configs_freeiran"
 CONFIG_PATTERN = r'(vmess://[^\s]+|vless://[^\s]+|trojan://[^\s]+|ss://[^\s]+)'
 OUTPUT_FILE = "processed_configs.txt"
+WEBSITE_URL = "https://lightningteam2007.github.io/Configfree.github.io/"  # آدرس سایتت
 
 def read_processed_configs():
     if os.path.exists(OUTPUT_FILE):
@@ -36,11 +38,9 @@ def scrape_channel(url):
         response.raise_for_status()
         logger.info(f"درخواست به {url} موفق بود: کد وضعیت {response.status_code}")
         soup = BeautifulSoup(response.text, "html.parser")
-        # پیدا کردن پیام‌ها با کلاس‌های مناسب برای لینک‌های /s/
         messages = soup.find_all("div", class_=lambda x: x and "tgme_widget_message_bubble" in x)
         configs = []
         for msg in messages:
-            # گرفتن متن پیام
             text_elements = msg.find_all("div", class_="tgme_widget_message_text")
             for text_elem in text_elements:
                 text = text_elem.get_text(strip=True)
@@ -59,9 +59,21 @@ async def send_to_telegram(configs):
     for config in configs:
         if config not in processed_configs:
             try:
+                # ساخت پیام با جزئیات جدید
+                message = (
+                    f"🎯 *کانفیگ جدید*\n"
+                    f"🔗 *کانفیگ*: `{config}`\n"
+                    f"🌐 *وب‌سایت*: [Config Free Iran]({WEBSITE_URL}) - کانفیگ‌های بیشتر!\n"
+                    f"🚀 *ویژگی*: کانفیگ‌های سریع و رایگان در کانال ما\n"
+                    f"ℹ️ *توضیحات*: این کانفیگ برای استفاده با v2rayNG مناسب است. لطفاً بعد از استفاده تست کنید!\n"
+                    f"💡 *کانال ما*: @{DEST_CHANNEL}\n\n"
+                    f"⚠️ *هشدار*: از اشتراک‌گذاری غیرمجاز خودداری کنید."
+                )
+
                 await bot.send_message(
                     chat_id=DEST_CHANNEL,
-                    text=f"{config}\n\nمنبع: {DEST_CHANNEL}",
+                    text=message,
+                    parse_mode="Markdown",  # برای فرمت‌بندی لینک و متن
                     disable_web_page_preview=True
                 )
                 logger.info(f"کانفیگ به {DEST_CHANNEL} ارسال شد: {config}")

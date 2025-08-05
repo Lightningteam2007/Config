@@ -1,0 +1,13 @@
+2025-08-05 19:13:28,268 - __main__ - INFO - === Starting Scraper ===
+2025-08-05 19:13:28,268 - __main__ - INFO - Scraping channel: https://t.me/s/V2RAYROZ
+2025-08-05 19:13:29,009 - __main__ - INFO - Found 12 config(s) from https://t.me/s/V2RAYROZ
+2025-08-05 19:13:31,013 - __main__ - INFO - Scraping channel: https://t.me/s/v2rayngvpn
+2025-08-05 19:13:31,709 - __main__ - INFO - Found 16 config(s) from https://t.me/s/v2rayngvpn
+2025-08-05 19:13:33,712 - __main__ - INFO - Scraping channel: https://t.me/s/V2ray_Alpha
+2025-08-05 19:13:34,359 - __main__ - INFO - Found 0 config(s) from https://t.me/s/V2ray_Alpha
+2025-08-05 19:13:36,406 - __main__ - INFO - Preparing to send 2 new config(s)
+2025-08-05 19:13:37,030 - httpx - INFO - HTTP Request: POST https://api.telegram.org/bot8316746677:AAGRpLQwYrXAQnDymovAF3moMSkQMk7GN8E/sendMessage "HTTP/1.1 200 OK"
+2025-08-05 19:13:38,533 - __main__ - INFO - Config sent successfully: vless://2036e2c3-18a5-4eed-9db4-f91a7f02c7d5@45.13...
+2025-08-05 19:13:38,812 - httpx - INFO - HTTP Request: POST https://api.telegram.org/bot8316746677:AAGRpLQwYrXAQnDymovAF3moMSkQMk7GN8E/sendMessage "HTTP/1.1 200 OK"
+2025-08-05 19:13:40,315 - __main__ - INFO - Config sent successfully: vless://30f2d443-af46-4dd6-83c9-b5e17299ebd2@104.2...
+2025-08-05 19:13:40,316 - __main__ - INFO - Finished in 12.05 seconds
